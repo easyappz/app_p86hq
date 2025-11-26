@@ -1,0 +1,25 @@
+get:
+  summary: Get current user profile
+  description: Retrieve profile information for the authenticated user
+  operationId: getProfile
+  tags:
+    - Profile
+  x-isSecure: true
+  security:
+    - cookieAuth: []
+  responses:
+    '200':
+      description: Profile retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Member'
+    '401':
+      description: Unauthorized - user not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Authentication required
+            details: {}

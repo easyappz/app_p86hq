@@ -1,0 +1,50 @@
+post:
+  summary: Send a new message
+  description: Create and send a new message to the chat
+  operationId: createMessage
+  tags:
+    - Messages
+  x-isSecure: true
+  security:
+    - cookieAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: Message text content
+              minLength: 1
+              maxLength: 5000
+  responses:
+    '201':
+      description: Message created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Message'
+    '400':
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Validation failed
+            details:
+              text:
+                - This field is required
+    '401':
+      description: Unauthorized - user not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Authentication required
+            details: {}

@@ -15,6 +15,16 @@ paths:
     $ref: './paths/auth-logout.yml'
   /api/auth/me/:
     $ref: './paths/auth-me.yml'
+  /api/profile/:
+    get:
+      $ref: './paths/profile-get.yml#/get'
+    put:
+      $ref: './paths/profile-update.yml#/put'
+  /api/messages/:
+    get:
+      $ref: './paths/messages-list.yml#/get'
+    post:
+      $ref: './paths/messages-create.yml#/post'
 components:
   schemas:
     Member:
@@ -37,6 +47,26 @@ components:
         - id
         - username
         - email
+        - created_at
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          description: Message text content
+        author:
+          $ref: '#/components/schemas/Member'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - id
+        - text
+        - author
         - created_at
     Error:
       type: object

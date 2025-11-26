@@ -1,0 +1,51 @@
+put:
+  summary: Update current user profile
+  description: Update username and email for the authenticated user
+  operationId: updateProfile
+  tags:
+    - Profile
+  x-isSecure: true
+  security:
+    - cookieAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              maxLength: 150
+              description: New username
+            email:
+              type: string
+              format: email
+              description: New email address
+  responses:
+    '200':
+      description: Profile updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Member'
+    '400':
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Validation failed
+            details:
+              email:
+                - This email is already in use
+    '401':
+      description: Unauthorized - user not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Authentication required
+            details: {}
