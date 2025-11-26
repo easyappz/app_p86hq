@@ -150,7 +150,7 @@ const Chat = () => {
   };
 
   const handleProfileClick = () => {
-    navigate('/');
+    navigate('/profile');
   };
 
   return (

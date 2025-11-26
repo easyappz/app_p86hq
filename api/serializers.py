@@ -119,7 +119,7 @@ class MessageAuthorSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Member
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'email', 'created_at']
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -128,7 +128,7 @@ class MessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Message
-        fields = ['id', 'author', 'text', 'created_at']
+        fields = ['id', 'text', 'author', 'created_at']
         read_only_fields = ['id', 'author', 'created_at']
 
     def validate_text(self, value):

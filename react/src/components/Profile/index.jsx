@@ -62,6 +62,10 @@ const Profile = () => {
     } catch (err) {
       if (err.response?.data?.error) {
         setError(err.response.data.error);
+      } else if (err.response?.data?.details) {
+        const details = err.response.data.details;
+        const errorMessages = Object.values(details).flat().join(', ');
+        setError(errorMessages);
       } else {
         setError('Не удалось обновить профиль');
       }
@@ -137,10 +141,10 @@ const Profile = () => {
                   <div className="profile-value">{profile?.email}</div>
                 </div>
 
-                {profile?.date_joined && (
+                {profile?.created_at && (
                   <div className="profile-field">
                     <label>Дата регистрации</label>
-                    <div className="profile-value">{formatDate(profile.date_joined)}</div>
+                    <div className="profile-value">{formatDate(profile.created_at)}</div>
                   </div>
                 )}
               </div>
@@ -173,7 +177,6 @@ const Profile = () => {
                   value={formData.username}
                   onChange={handleInputChange}
                   className="form-input"
-                  required
                   maxLength={150}
                 />
               </div>
@@ -187,14 +190,13 @@ const Profile = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="form-input"
-                  required
                 />
               </div>
 
-              {profile?.date_joined && (
+              {profile?.created_at && (
                 <div className="profile-field">
                   <label>Дата регистрации</label>
-                  <div className="profile-value">{formatDate(profile.date_joined)}</div>
+                  <div className="profile-value">{formatDate(profile.created_at)}</div>
                 </div>
               )}
 

@@ -276,10 +276,23 @@ class MessagesPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class MessagesListView(APIView):
+class MessagesView(APIView):
     """
-    API endpoint to get paginated list of messages.
+    API endpoint to get paginated list of messages and create new messages.
     """
+
+    def get_authenticated_member(self, request):
+        """Helper method to get authenticated member."""
+        member_id = request.session.get('member_id')
+        
+        if not member_id:
+            return None
+        
+        try:
+            return Member.objects.get(id=member_id)
+        except Member.DoesNotExist:
+            request.session.flush()
+            return None
 
     @extend_schema(
         responses={
@@ -289,9 +302,9 @@ class MessagesListView(APIView):
         description="Get paginated list of chat messages"
     )
     def get(self, request):
-        member_id = request.session.get('member_id')
+        member = self.get_authenticated_member(request)
         
-        if not member_id:
+        if not member:
             return Response(
                 {
                     "error": "Authentication required",
@@ -309,12 +322,6 @@ class MessagesListView(APIView):
         
         return paginator.get_paginated_response(serializer.data)
 
-
-class MessageCreateView(APIView):
-    """
-    API endpoint to create a new message.
-    """
-
     @extend_schema(
         request=MessageCreateSerializer,
         responses={
@@ -325,21 +332,9 @@ class MessageCreateView(APIView):
         description="Create a new chat message"
     )
     def post(self, request):
-        member_id = request.session.get('member_id')
+        member = self.get_authenticated_member(request)
         
-        if not member_id:
-            return Response(
-                {
-                    "error": "Authentication required",
-                    "details": {}
-                },
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        try:
-            member = Member.objects.get(id=member_id)
-        except Member.DoesNotExist:
-            request.session.flush()
+        if not member:
             return Response(
                 {
                     "error": "Authentication required",

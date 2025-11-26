@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../../api/auth';
 import './styles.css';
 
@@ -41,8 +41,6 @@ const Register = () => {
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email обязателен';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Введите корректный email';
     }
 
     if (!formData.password) {
@@ -203,9 +201,9 @@ const Register = () => {
         <div className="register-footer">
           <p className="footer-text">
             Уже есть аккаунт?{' '}
-            <a href="/login" className="footer-link">
+            <Link to="/login" className="footer-link">
               Войти
-            </a>
+            </Link>
           </p>
         </div>
       </div>
