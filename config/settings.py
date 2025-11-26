@@ -32,7 +32,7 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 
-# CORS settings (если нужно разрешить кросс-доменные запросы)
+# CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
 CORS_ALLOW_CREDENTIALS = True
 
@@ -54,6 +54,13 @@ MEDIA_ROOT = BASE_DIR / "persistent" / "media/"
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Session settings for HttpOnly cookies
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 
 # Application definition
 
