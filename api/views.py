@@ -1,15 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from .serializers import (
     MessageSerializer,
+    MessageCreateSerializer,
     MemberSerializer,
     RegisterSerializer,
-    LoginSerializer
+    LoginSerializer,
+    ProfileUpdateSerializer
 )
-from .models import Member
+from .models import Member, Message
 
 
 class HelloView(APIView):
@@ -18,12 +21,11 @@ class HelloView(APIView):
     """
 
     @extend_schema(
-        responses={200: MessageSerializer}, description="Get a hello world message"
+        responses={200: dict}, description="Get a hello world message"
     )
     def get(self, request):
         data = {"message": "Hello!", "timestamp": timezone.now()}
-        serializer = MessageSerializer(data)
-        return Response(serializer.data)
+        return Response(data)
 
 
 class RegisterView(APIView):
@@ -187,3 +189,177 @@ class CurrentUserView(APIView):
         
         serializer = MemberSerializer(member)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProfileView(APIView):
+    """
+    API endpoint to get and update current user profile.
+    """
+
+    def get_authenticated_member(self, request):
+        """Helper method to get authenticated member."""
+        member_id = request.session.get('member_id')
+        
+        if not member_id:
+            return None
+        
+        try:
+            return Member.objects.get(id=member_id)
+        except Member.DoesNotExist:
+            request.session.flush()
+            return None
+
+    @extend_schema(
+        responses={
+            200: MemberSerializer,
+            401: dict
+        },
+        description="Get current user profile"
+    )
+    def get(self, request):
+        member = self.get_authenticated_member(request)
+        
+        if not member:
+            return Response(
+                {
+                    "error": "Authentication required",
+                    "details": {}
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        serializer = MemberSerializer(member)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=ProfileUpdateSerializer,
+        responses={
+            200: MemberSerializer,
+            400: dict,
+            401: dict
+        },
+        description="Update current user profile"
+    )
+    def put(self, request):
+        member = self.get_authenticated_member(request)
+        
+        if not member:
+            return Response(
+                {
+                    "error": "Authentication required",
+                    "details": {}
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        serializer = ProfileUpdateSerializer(member, data=request.data, partial=True)
+        
+        if not serializer.is_valid():
+            return Response(
+                {
+                    "error": "Validation failed",
+                    "details": serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer.save()
+        response_serializer = MemberSerializer(member)
+        
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class MessagesPagination(PageNumberPagination):
+    """Custom pagination for messages."""
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class MessagesListView(APIView):
+    """
+    API endpoint to get paginated list of messages.
+    """
+
+    @extend_schema(
+        responses={
+            200: dict,
+            401: dict
+        },
+        description="Get paginated list of chat messages"
+    )
+    def get(self, request):
+        member_id = request.session.get('member_id')
+        
+        if not member_id:
+            return Response(
+                {
+                    "error": "Authentication required",
+                    "details": {}
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        messages = Message.objects.all().select_related('author')
+        
+        paginator = MessagesPagination()
+        paginated_messages = paginator.paginate_queryset(messages, request)
+        
+        serializer = MessageSerializer(paginated_messages, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
+
+
+class MessageCreateView(APIView):
+    """
+    API endpoint to create a new message.
+    """
+
+    @extend_schema(
+        request=MessageCreateSerializer,
+        responses={
+            201: MessageSerializer,
+            400: dict,
+            401: dict
+        },
+        description="Create a new chat message"
+    )
+    def post(self, request):
+        member_id = request.session.get('member_id')
+        
+        if not member_id:
+            return Response(
+                {
+                    "error": "Authentication required",
+                    "details": {}
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        try:
+            member = Member.objects.get(id=member_id)
+        except Member.DoesNotExist:
+            request.session.flush()
+            return Response(
+                {
+                    "error": "Authentication required",
+                    "details": {}
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        serializer = MessageCreateSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {
+                    "error": "Validation failed",
+                    "details": serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        message = serializer.save(author=member)
+        response_serializer = MessageSerializer(message)
+        
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Member
+from .models import Member, Message
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -83,6 +83,79 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
-class MessageSerializer(serializers.Serializer):
-    message = serializers.CharField(max_length=200)
-    timestamp = serializers.DateTimeField(read_only=True)
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating user profile."""
+    
+    class Meta:
+        model = Member
+        fields = ['username', 'email']
+        extra_kwargs = {
+            'username': {
+                'required': False,
+                'max_length': 150
+            },
+            'email': {
+                'required': False
+            }
+        }
+
+    def validate_username(self, value):
+        """Check if username already exists for other users."""
+        instance = self.instance
+        if Member.objects.filter(username=value).exclude(id=instance.id).exists():
+            raise serializers.ValidationError("User with this username already exists")
+        return value
+
+    def validate_email(self, value):
+        """Check if email already exists for other users."""
+        instance = self.instance
+        if Member.objects.filter(email=value).exclude(id=instance.id).exists():
+            raise serializers.ValidationError("This email is already in use")
+        return value
+
+
+class MessageAuthorSerializer(serializers.ModelSerializer):
+    """Serializer for message author information."""
+    
+    class Meta:
+        model = Member
+        fields = ['id', 'username']
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    """Serializer for Message model."""
+    author = MessageAuthorSerializer(read_only=True)
+    
+    class Meta:
+        model = Message
+        fields = ['id', 'author', 'text', 'created_at']
+        read_only_fields = ['id', 'author', 'created_at']
+
+    def validate_text(self, value):
+        """Validate message text."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("This field is required")
+        if len(value) > 5000:
+            raise serializers.ValidationError("Message text is too long")
+        return value
+
+
+class MessageCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating messages."""
+    
+    class Meta:
+        model = Message
+        fields = ['text']
+        extra_kwargs = {
+            'text': {
+                'required': True,
+                'min_length': 1,
+                'max_length': 5000
+            }
+        }
+
+    def validate_text(self, value):
+        """Validate message text."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("This field is required")
+        return value

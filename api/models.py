@@ -44,3 +44,23 @@ class Member(models.Model):
     def has_module_perms(self, app_label):
         """For DRF permission compatibility."""
         return True
+
+
+class Message(models.Model):
+    """
+    Message model for chat messages.
+    """
+    author = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    text = models.TextField(max_length=5000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'messages'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Message by {self.author.username} at {self.created_at}"
