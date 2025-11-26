@@ -1,0 +1,64 @@
+post:
+  summary: Register new user
+  description: Create a new user account with username, email and password
+  operationId: registerUser
+  tags:
+    - Authentication
+  x-isSecure: false
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - username
+            - email
+            - password
+          properties:
+            username:
+              type: string
+              minLength: 3
+              maxLength: 150
+              description: Unique username for the user
+            email:
+              type: string
+              format: email
+              description: Unique email address
+            password:
+              type: string
+              minLength: 8
+              maxLength: 128
+              description: Password for the account
+  responses:
+    '201':
+      description: User successfully registered
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: User registered successfully
+              user:
+                $ref: '../openapi.yml#/components/schemas/Member'
+    '400':
+      description: Validation error or user already exists
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          examples:
+            validationError:
+              value:
+                error: Validation failed
+                details:
+                  username:
+                    - This field is required
+            userExists:
+              value:
+                error: User already exists
+                details:
+                  email:
+                    - User with this email already exists

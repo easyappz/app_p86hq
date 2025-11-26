@@ -1,0 +1,62 @@
+post:
+  summary: Login user
+  description: Authenticate user with email and password, sets HttpOnly cookie
+  operationId: loginUser
+  tags:
+    - Authentication
+  x-isSecure: false
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+              description: User email address
+            password:
+              type: string
+              description: User password
+  responses:
+    '200':
+      description: Successfully logged in
+      headers:
+        Set-Cookie:
+          schema:
+            type: string
+            example: sessionid=abc123; HttpOnly; Path=/; SameSite=Lax
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Login successful
+              user:
+                $ref: '../openapi.yml#/components/schemas/Member'
+    '400':
+      description: Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Invalid credentials
+            details:
+              non_field_errors:
+                - Invalid email or password
+    '401':
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Authentication failed
+            details: {}

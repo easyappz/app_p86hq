@@ -1,0 +1,25 @@
+get:
+  summary: Get current user
+  description: Retrieve information about the currently authenticated user
+  operationId: getCurrentUser
+  tags:
+    - Authentication
+  x-isSecure: true
+  security:
+    - cookieAuth: []
+  responses:
+    '200':
+      description: Current user information
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Member'
+    '401':
+      description: Not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yml#/components/schemas/Error'
+          example:
+            error: Authentication required
+            details: {}
